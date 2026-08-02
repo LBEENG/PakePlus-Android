@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="营养监测">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#2db84d">
+  <meta name="description" content="个人营养监测工作台 - AI识图营养计算、维生素矿物质达标分析">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png">
+  <link rel="apple-touch-startup-image" href="assets/icon-512.png">
+  <title>营养监测工作台</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- 顶部栏 -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="app-logo">
+          <span class="logo-icon">🥗</span>
+        </div>
+      </div>
+      <div class="header-center">
+        <div class="date-nav" id="dateNav">
+          <button class="date-btn" id="prevDay">‹</button>
+          <span class="current-date" id="currentDateLabel"></span>
+          <button class="date-btn" id="nextDay">›</button>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="today-btn" id="todayBtn">今天</button>
+        <button class="settings-icon-btn" onclick="App.switchTab('settings')" title="设置">⚙️</button>
+      </div>
+    </header>
+
+    <!-- 通知区 -->
+    <div class="notification-area" id="notificationArea"></div>
+
+    <!-- 内容区（可滑动切换标签页） -->
+    <main class="tab-content" id="tabContent">
+      <!-- 动态渲染 -->
+    </main>
+
+    <!-- 底部标签导航 -->
+    <nav class="tab-nav" id="bottomTabNav">
+      <button class="tab-btn active" data-tab="record">
+        <span class="tab-icon">🍽️</span>
+        <span class="tab-label">记录</span>
+      </button>
+      <button class="tab-btn" data-tab="report">
+        <span class="tab-icon">📊</span>
+        <span class="tab-label">报告</span>
+      </button>
+      <button class="tab-btn tab-btn-add" onclick="App.openMealEditor()">
+        <span class="tab-icon-add">＋</span>
+      </button>
+      <button class="tab-btn" data-tab="analysis">
+        <span class="tab-icon">📈</span>
+        <span class="tab-label">趋势</span>
+      </button>
+      <button class="tab-btn" data-tab="supplement">
+        <span class="tab-icon">💊</span>
+        <span class="tab-label">补剂</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- 餐次编辑模态框（全屏） -->
+  <div class="modal-overlay" id="mealModal" style="display:none;">
+    <div class="modal modal-fullscreen">
+      <div class="modal-header modal-header-sticky">
+        <button class="modal-back" onclick="App.closeMealEditor()">‹ 返回</button>
+        <h3 id="mealModalTitle">添加餐次</h3>
+        <button class="btn btn-sm btn-primary" onclick="App.saveMeal()">保存</button>
+      </div>
+      <div class="modal-body" id="mealModalBody">
+        <!-- 动态渲染 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 通用确认模态框 -->
+  <div class="modal-overlay" id="confirmModal" style="display:none;">
+    <div class="modal modal-dialog">
+      <div class="modal-header">
+        <h3 id="confirmTitle">确认</h3>
+        <button class="modal-close" onclick="App.closeConfirm()">✕</button>
+      </div>
+      <div class="modal-body" id="confirmBody"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="App.closeConfirm()">取消</button>
+        <button class="btn btn-primary" id="confirmOkBtn">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提示Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- 安装提示 -->
+  <div class="install-prompt" id="installPrompt" style="display:none;">
+    <div class="install-prompt-content">
+      <span>📱 添加到主屏幕，像原生App一样使用</span>
+      <button class="btn btn-sm btn-primary" id="installBtn">安装</button>
+      <button class="btn btn-sm btn-secondary" onclick="document.getElementById('installPrompt').style.display='none'">暂不</button>
+    </div>
+  </div>
+
+  <script src="js/nutrition-standards.js"></script>
+  <script src="js/food-database.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+  <!-- 首次访问提示生成图标 -->
+  <script>
+  (function(){
+    if(!localStorage.getItem('icons_prompted') && !localStorage.getItem('icons_generated')){
+      localStorage.setItem('icons_prompted','1');
+      setTimeout(function(){
+        var div=document.createElement('div');
+        div.style.cssText='position:fixed;bottom:80px;left:12px;right:12px;z-index:260;max-width:480px;margin:0 auto;';
+        div.innerHTML='<div style="background:#fff;padding:14px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);font-size:13px;text-align:center;">📱 <b>想安装到手机主屏幕？</b><br/><span style="font-size:11px;color:#6b7280;">打开 generate-icons.html 一键生成App图标</span><br/><button style="margin-top:6px;padding:6px 16px;border-radius:16px;background:#2db84d;color:#fff;border:none;font-size:12px;" onclick="this.parentElement.parentElement.remove()">知道了</button></div>';
+        document.body.appendChild(div);
+      },5000);
+    }
+  })();
+  </script>
+</body>
+</html>
