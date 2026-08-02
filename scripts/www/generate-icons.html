@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>生成App图标</title></head>
+<body style="text-align:center;padding:20px;font-family:sans-serif;">
+  <h2>🍏 营养监测 App 图标生成器</h2>
+  <p>打开此页面后将自动生成并下载所有尺寸图标</p>
+  <canvas id="c" width="512" height="512" style="display:none;"></canvas>
+  <div id="status"></div>
+  <script>
+    const sizes = [72,96,128,144,152,180,192,384,512];
+    const status = document.getElementById('status');
+
+    function drawIcon(size) {
+      const c = document.getElementById('c');
+      c.width = size; c.height = size;
+      const ctx = c.getContext('2d');
+
+      // 渐变背景
+      const grad = ctx.createLinearGradient(0, 0, size, size);
+      grad.addColorStop(0, '#2db84d');
+      grad.addColorStop(1, '#1e9e3a');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect(size*0.08, size*0.08, size*0.84, size*0.84, size*0.18);
+      ctx.fill();
+
+      // 白色内圆
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.beginPath();
+      ctx.arc(size*0.5, size*0.5, size*0.32, 0, Math.PI*2);
+      ctx.fill();
+
+      // 叶子图标
+      ctx.fillStyle = 'white';
+      ctx.font = `bold ${size*0.32}px "Segoe UI Emoji","Apple Color Emoji",sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🥗', size*0.5, size*0.5);
+
+      return c.toDataURL('image/png');
+    }
+
+    async function generateAll() {
+      for (const size of sizes) {
+        const dataUrl = drawIcon(size);
+        const link = document.createElement('a');
+        link.download = `icon-${size}.png`;
+        link.href = dataUrl;
+        link.click();
+        status.innerHTML += `✅ icon-${size}.png 已生成<br>`;
+        await new Promise(r => setTimeout(r, 200));
+      }
+      status.innerHTML += '<br><b>全部完成！将所有PNG文件放入 assets/ 文件夹即可</b>';
+    }
+
+    setTimeout(generateAll, 500);
+  </script>
+</body></html>
